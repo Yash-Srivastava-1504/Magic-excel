@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Read(//tmp/**)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(npx vite:*)",
+      "Bash(wc -l /c/projects/data-sage/src/**/*.ts /c/projects/data-sage/src/**/*.tsx)"
+    ]
+  }
+}

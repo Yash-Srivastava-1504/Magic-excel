@@ -1,0 +1,291 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 16% 97%;
+    --foreground: 220 13% 5%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 5%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 5%;
+
+    --primary: 142 50% 38%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 93%;
+    --secondary-foreground: 220 13% 12%;
+
+    --muted: 220 14% 93%;
+    --muted-foreground: 220 10% 42%;
+
+    --accent: 220 14% 90%;
+    --accent-foreground: 220 13% 5%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 14% 85%;
+    --input: 220 14% 85%;
+    --ring: 142 50% 38%;
+
+    --radius: 0.25rem;
+
+    --toolbar-bg: 220 16% 97%;
+    --toolbar-border: 220 14% 88%;
+    --menubar-bg: 0 0% 100%;
+    --menubar-hover: 220 14% 93%;
+
+    --sheet-header-bg: 220 33% 18%; /* Dark Navy */
+    --sheet-header-foreground: 210 20% 98%; /* White text */
+    --sheet-grid-line: 220 14% 92%; /* Brighter, cleaner lines */
+    --sheet-selected: 215 100% 96%;
+    --sheet-selected-border: 215 100% 50%;
+    --sheet-zebra: 220 14% 98%; /* Subtle alternating background */
+
+    --diff-delete: 0 100% 35%;
+    --diff-modify: 38 100% 38%;
+    --diff-add: 142 75% 35%;
+    --diff-highlight: 270 100% 45%;
+
+    --badge-highlight-bg: 270 80% 92%;
+    --badge-highlight-text: 270 60% 50%;
+    --badge-highlight-border: 270 60% 65%;
+    --badge-delete-bg: 0 80% 92%;
+    --badge-delete-text: 0 60% 50%;
+    --badge-delete-border: 0 60% 65%;
+    --badge-modify-bg: 38 100% 90%;
+    --badge-modify-text: 38 85% 48%;
+    --badge-modify-border: 38 85% 65%;
+    --badge-add-bg: 142 75% 90%;
+    --badge-add-text: 142 50% 50%;
+    --badge-add-border: 142 50% 65%;
+
+    --prompt-bg: 220 16% 97%;
+    --prompt-border: 142 50% 38%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Excel-themed landing page colors (OKLCH) */
+    --color-success: oklch(0.7 0.17 150);
+    --color-success-foreground: oklch(0.99 0 0);
+    --color-warning: oklch(0.78 0.16 75);
+    --color-warning-foreground: oklch(0.25 0.04 60);
+    --color-sheet-highlight: oklch(0.92 0.13 95);
+    --color-sheet-changed: oklch(0.88 0.13 150);
+    --color-excel-green: oklch(0.55 0.16 152);
+    --color-excel-green-dark: oklch(0.42 0.15 152);
+    --color-excel-grid: oklch(0.86 0.005 150);
+    --color-excel-header: oklch(0.96 0.01 150);
+
+    --gradient-bg: radial-gradient(1200px 600px at 80% -10%, oklch(0.95 0.07 150 / 0.6), transparent 60%),
+                   radial-gradient(900px 500px at -10% 30%, oklch(0.93 0.05 200 / 0.45), transparent 60%),
+                   linear-gradient(180deg, oklch(0.99 0.005 150) 0%, oklch(0.97 0.01 150) 100%);
+    --gradient-primary: linear-gradient(135deg, oklch(0.55 0.16 152), oklch(0.45 0.16 165));
+    --shadow-soft: 0 1px 3px oklch(0.18 0.02 160 / 0.05), 0 4px 16px oklch(0.18 0.02 160 / 0.06);
+    --shadow-elevated: 0 8px 24px oklch(0.18 0.02 160 / 0.08), 0 24px 64px oklch(0.18 0.02 160 / 0.08);
+    --shadow-glow: 0 0 0 6px oklch(0.55 0.16 152 / 0.12), 0 12px 32px oklch(0.55 0.16 152 / 0.25);
+  }
+
+  .dark {
+    --background: 220 16% 10%;
+    --foreground: 220 13% 91%;
+
+    --card: 220 16% 16%;
+    --card-foreground: 220 13% 96%;
+
+    --popover: 220 16% 15%;
+    --popover-foreground: 220 13% 91%;
+
+    --primary: 142 50% 48%;
+    --primary-foreground: 220 16% 6%;
+
+    --secondary: 220 14% 18%;
+    --secondary-foreground: 220 13% 75%;
+
+    --muted: 220 14% 16%;
+    --muted-foreground: 220 10% 50%;
+
+    --accent: 220 14% 20%;
+    --accent-foreground: 220 13% 91%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 14% 20%;
+    --input: 220 14% 20%;
+    --ring: 142 50% 48%;
+
+    --toolbar-bg: 220 16% 13%;
+    --toolbar-border: 220 14% 20%;
+    --menubar-bg: 220 16% 12%;
+    --menubar-hover: 220 14% 20%;
+
+    --sheet-header-bg: 220 33% 18%;
+    --sheet-grid-line: 220 14% 20%;
+    --sheet-selected: 210 60% 18%;
+    --sheet-selected-border: 210 100% 45%;
+
+    --diff-delete: 0 62% 50%;
+    --diff-modify: 38 92% 50%;
+    --diff-add: 142 50% 48%;
+    --diff-highlight: 270 70% 60%;
+
+    --badge-highlight-bg: 270 60% 15%;
+    --badge-highlight-text: 270 60% 80%;
+    --badge-highlight-border: 270 60% 35%;
+    --badge-delete-bg: 0 60% 15%;
+    --badge-delete-text: 0 60% 80%;
+    --badge-delete-border: 0 60% 35%;
+    --badge-modify-bg: 38 85% 15%;
+    --badge-modify-text: 38 85% 75%;
+    --badge-modify-border: 38 85% 35%;
+    --badge-add-bg: 142 50% 15%;
+    --badge-add-text: 142 50% 80%;
+    --badge-add-border: 142 50% 35%;
+
+    --prompt-bg: 220 16% 12%;
+    --prompt-border: 142 50% 48%;
+
+    --sidebar-background: 220 16% 8%;
+    --sidebar-foreground: 220 13% 75%;
+    --sidebar-primary: 142 50% 48%;
+    --sidebar-primary-foreground: 220 16% 6%;
+    --sidebar-accent: 220 14% 14%;
+    --sidebar-accent-foreground: 220 13% 91%;
+    --sidebar-border: 220 14% 18%;
+    --sidebar-ring: 142 50% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background-color: hsl(var(--border)); border-radius: 3px; }
+  *::-webkit-scrollbar-thumb:hover { background-color: hsl(var(--muted-foreground) / 0.5); }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  code, .font-mono {
+    font-family: "JetBrains Mono", monospace;
+  }
+}
+
+@layer utilities {
+  .diff-delete {
+    background-color: hsl(var(--diff-delete) / 0.15);
+    border-left: 3px solid hsl(var(--diff-delete));
+  }
+  .diff-modify {
+    background-color: hsl(var(--diff-modify) / 0.15);
+    border-left: 3px solid hsl(var(--diff-modify));
+  }
+  .diff-highlight {
+    background-color: hsl(var(--diff-highlight) / 0.15);
+    border-left: 3px solid hsl(var(--diff-highlight));
+  }
+  .diff-add {
+    background-color: hsl(var(--diff-add) / 0.15);
+    border-left: 3px solid hsl(var(--diff-add));
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background-color: hsl(var(--border)); border-radius: 3px; }
+
+  .badge-md {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 10px;
+    display: inline-block;
+  }
+  .badge-highlight { background-color: hsl(var(--badge-highlight-bg) / 0.3); color: hsl(var(--badge-highlight-text)); border: 1px solid hsl(var(--badge-highlight-border) / 0.5); font-weight: 600; }
+  .badge-delete { background-color: hsl(var(--badge-delete-bg) / 0.3); color: hsl(var(--badge-delete-text)); border: 1px solid hsl(var(--badge-delete-border) / 0.5); font-weight: 600; }
+  .badge-modify { background-color: hsl(var(--badge-modify-bg) / 0.3); color: hsl(var(--badge-modify-text)); border: 1px solid hsl(var(--badge-modify-border) / 0.5); font-weight: 600; }
+  .badge-add { background-color: hsl(var(--badge-add-bg) / 0.3); color: hsl(var(--badge-add-text)); border: 1px solid hsl(var(--badge-add-border) / 0.5); font-weight: 600; }
+
+  .bg-toolbar-bg { background-color: hsl(var(--toolbar-bg)); }
+  .bg-toolbar-border { background-color: hsl(var(--toolbar-border)); }
+  .border-toolbar-border { border-color: hsl(var(--toolbar-border)); }
+  .bg-menubar-bg { background-color: hsl(var(--menubar-bg)); }
+  .bg-menubar-hover { background-color: hsl(var(--menubar-hover)); }
+  .hover\:bg-menubar-hover:hover { background-color: hsl(var(--menubar-hover)); }
+  .bg-sheet-header { background-color: hsl(var(--sheet-header-bg)); }
+  .border-sheet-grid { border-color: hsl(var(--sheet-grid-line)); }
+  .bg-sheet-selected { background-color: hsl(var(--sheet-selected)); }
+  .outline-sheet-selected-border { outline-color: hsl(var(--sheet-selected-border)); }
+
+  @media (max-width: 900px) {
+    .hide-under-900 { display: none !important; }
+    .show-under-900 { display: block !important; }
+  }
+  @media (min-width: 901px) {
+    .show-under-900 { display: none !important; }
+  }
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+@keyframes ripple {
+  0% { transform: scale(0.5); opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+@keyframes fade-up {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes cell-flash {
+  0% { background-color: var(--color-sheet-changed); transform: scale(1); }
+  50% { transform: scale(1.04); }
+  100% { background-color: var(--color-sheet-changed); transform: scale(1); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.55 0.16 152 / 0.4); }
+  50% { box-shadow: 0 0 0 14px oklch(0.55 0.16 152 / 0); }
+}
+
+.animate-ripple { animation: ripple 0.6s ease-out; }
+.animate-fade-up { animation: fade-up 0.4s ease-out backwards; }
+.animate-cell-flash { animation: cell-flash 0.8s ease-out; }
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 2.4s ease-in-out infinite; }
+
