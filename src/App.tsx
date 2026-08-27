@@ -49,20 +49,17 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 }
 
 function AuthGate() {
-  const { session, loading, error, login, logout } = useAuth();
-  const isDeployed = import.meta.env.VITE_APP_DEPLOYED === "true";
+  const { session, loading, error, login, signup, logout } = useAuth();
 
   if (!session) {
-    if (isDeployed) {
-      return (
-        <LoginScreen
-          onLogin={login}
-          loading={loading}
-          error={error}
-        />
-      );
-    }
-    return <LandingPage />;
+    return (
+      <LandingPage
+        onLogin={login}
+        onSignup={signup}
+        loading={loading}
+        error={error}
+      />
+    );
   }
 
   return (

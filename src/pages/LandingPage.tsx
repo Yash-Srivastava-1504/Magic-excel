@@ -1,6 +1,6 @@
 import { TalkToExlDemo } from "@/components/demo/TalkToExlDemo";
 import { ResponsiveDemoFrame } from "@/components/demo/ResponsiveDemoFrame";
-import { PreRegisterForm } from "@/components/PreRegisterForm";
+import LoginScreen from "@/components/LoginScreen";
 import logoUrl from "@/assets/logo.png";
 import {
   Sparkles,
@@ -12,16 +12,24 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-export default function LandingPage() {
+interface LandingPageProps {
+  onLogin: (username: string, passcode: string) => Promise<boolean>;
+  onSignup: (username: string, passcode: string) => Promise<boolean>;
+  loading: boolean;
+  error: string | null;
+}
+
+export default function LandingPage({ onLogin, onSignup, loading, error }: LandingPageProps) {
   return (
     <main className="min-h-screen bg-background text-foreground font-sans relative">
-      <div className="fixed top-6 left-6 z-50 flex items-center gap-2.5 font-bold tracking-tight text-foreground/90">
+      <div className="fixed top-6 left-6 z-50 flex items-center gap-2.5 font-bold tracking-tight text-foreground/90 select-none">
         <Logo />
-        <span className="text-sm">talktoexl</span>
+        <span className="text-sm font-semibold tracking-tight">Magic Excel</span>
       </div>
+      <Header />
       <Hero />
       <Perks />
-      <PreRegisterSection />
+      <AuthSection onLogin={onLogin} onSignup={onSignup} loading={loading} error={error} />
       <Footer />
     </main>
   );
@@ -29,7 +37,7 @@ export default function LandingPage() {
 
 function Logo() {
   return (
-    <img src={logoUrl} alt="talktoexl logo" className="h-7 w-7 object-contain" />
+    <img src={logoUrl} alt="Magic Excel logo" className="h-7 w-7 object-contain" />
   );
 }
 
@@ -38,25 +46,30 @@ function Header() {
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <a href="#top" className="flex items-center gap-2 font-semibold tracking-tight text-foreground">
-          <Logo />
-          <span>talktoexl</span>
+          {/* Logo kept on the left */}
         </a>
         <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
           <a href="#perks" className="hover:text-foreground">Why us</a>
-          <a href="#waitlist" className="hover:text-foreground">Pre-register</a>
+          <a href="#auth-section" className="hover:text-foreground">Login / Sign Up</a>
         </nav>
         <a
-          href="#waitlist"
+          href="#auth-section"
           className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
         >
-          Get early access <ArrowRight className="h-3 w-3" />
+          Sign In <ArrowRight className="h-3 w-3" />
         </a>
       </div>
     </header>
   );
 }
 
-import { WaitlistBanner } from "@/components/WaitlistBanner";
+function BrandBadge() {
+  return (
+    <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#f0f5ff] text-[10px] sm:text-[11px] font-bold tracking-[0.14em] text-[#64748b] uppercase animate-fade-in shadow-sm border border-blue-50/50">
+      ✨ INTRODUCING <span className="text-black font-[900] text-[12px] sm:text-[13px]">MAGIC EXCEL</span>
+    </div>
+  );
+}
 
 function Hero() {
   return (
@@ -64,7 +77,7 @@ function Hero() {
       <div className="mx-auto max-w-6xl w-full">
         <div className="mx-auto max-w-3xl text-center mb-8">
           <div className="mb-6">
-            <WaitlistBanner />
+            <BrandBadge />
           </div>
           <h1 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
             We let your <span className="text-primary">sheet talk</span>
@@ -79,10 +92,10 @@ function Hero() {
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
           <a
-            href="#waitlist"
+            href="#auth-section"
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition hover:bg-opacity-90 hover:scale-[1.02]"
           >
-            Pre-register for early access <ArrowRight className="h-4 w-4" />
+            Get Started (Sign Up / Login) <ArrowRight className="h-4 w-4" />
           </a>
           <a
             href="#perks"
@@ -100,7 +113,7 @@ function Perks() {
   const perks = [
     {
       icon: Eye,
-      title: "Visual previews ",
+      title: "Visual previews",
       body: "Every filter, edit, or transformation is highlighted in your sheet before it commits. No more guessing what the AI did.",
     },
     {
@@ -137,7 +150,7 @@ function Perks() {
             Not just another AI wrapper
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Most tools generate code you have to trust. talktoexl shows you exactly what changes
+            Most tools generate code you have to trust. Magic Excel shows you exactly what changes
             before it touches a single cell.
           </p>
         </div>
@@ -160,23 +173,34 @@ function Perks() {
   );
 }
 
-function PreRegisterSection() {
+function AuthSection({ onLogin, onSignup, loading, error }: {
+  onLogin: (username: string, passcode: string) => Promise<boolean>;
+  onSignup: (username: string, passcode: string) => Promise<boolean>;
+  loading: boolean;
+  error: string | null;
+}) {
   return (
-    <section id="waitlist" className="border-t border-border/60 bg-card/30 px-4 py-20 sm:py-24">
-      <div className="mx-auto max-w-3xl">
-        <div className="mx-auto max-w-2xl text-center">
+    <section id="auth-section" className="border-t border-border/60 bg-card/10 px-4 py-20 sm:py-24">
+      <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-2xl text-center mb-8">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
-            <Sparkles className="h-3 w-3" /> Limited early access
+            <Sparkles className="h-3 w-3" /> Secure Access
           </span>
           <h2 className="mt-4 text-balance text-3xl font-bold tracking-tight sm:text-4xl">
-            Add yourself to the sheet.
+            Sign Up or Log In
           </h2>
-          <p className="mt-3 text-muted-foreground">
-            Fill the row below: name and email are required. We'll email you when your seat opens up.
+          <p className="mt-3 text-muted-foreground text-sm">
+            Enter your credentials in B2 and B3, then switch mode in B4 and hit execute in C3.
           </p>
         </div>
-        <div className="mt-10">
-          <PreRegisterForm />
+        <div className="mt-8 flex justify-center">
+          <LoginScreen
+            embedded={true}
+            onLogin={onLogin}
+            onSignup={onSignup}
+            loading={loading}
+            error={error}
+          />
         </div>
       </div>
     </section>
@@ -189,13 +213,13 @@ function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
         <div className="flex items-center gap-3">
           <Logo />
-          <a href="https://dupoch.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground hover:opacity-80">dupoch</a>
+          <span className="font-semibold text-foreground">Magic Excel</span>
           <span className="opacity-40">|</span>
-          <span>© {new Date().getFullYear()} talktoexl</span>
+          <span>© {new Date().getFullYear()} Magic Excel</span>
         </div>
         <div className="flex items-center gap-4">
           <a href="#perks" className="hover:text-foreground">Why us</a>
-          <a href="#waitlist" className="hover:text-foreground">Pre-register</a>
+          <a href="#auth-section" className="hover:text-foreground">Login / Sign Up</a>
         </div>
       </div>
     </footer>

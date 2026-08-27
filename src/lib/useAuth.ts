@@ -12,7 +12,7 @@ export interface AuthSession {
   username: string;
 }
 
-const SESSION_KEY = "talktoexl_session";
+const SESSION_KEY = "magicexcel_session";
 
 function loadSession(): AuthSession | null {
   try {
@@ -54,16 +54,33 @@ export function useAuth() {
       setSession({ userId, username: data.user?.username || username });
       return true;
     } catch (e: any) {
-      setError(e.response?.data?.detail || "Invalid username or passcode.");
+      setError(e.response?.data?.detail || e.message || "Invalid username or passcode.");
       return false;
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const signup = useCallback(async (username: string, passcode: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await backendApi.signup(username, passcode);
+      // Automatically log in user after successful signup
+      const success = await login(username, passcode);
+      return success;
+    } catch (e: any) {
+      setError(e.message || "Registration failed. Username may already exist.");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [login]);
+
   const logout = useCallback(() => {
     setSession(null);
   }, []);
 
-  return { session, loading, error, login, logout };
+  return { session, loading, error, login, signup, logout };
 }

@@ -174,7 +174,7 @@ export function TalkToExlDemo({ active = true }: Props) {
               <Sparkles className="h-3.5 w-3.5" />
             </div>
             <div>
-              <p className="text-sm font-semibold">talktoexl assistant</p>
+              <p className="text-sm font-semibold">Magic Excel Assistant</p>
               <p className="text-[10px] text-muted-foreground">Ask in plain English</p>
             </div>
           </div>
@@ -257,7 +257,7 @@ function BrowserChrome() {
       <span className="h-3 w-3 rounded-full bg-warning/80" />
       <span className="h-3 w-3 rounded-full bg-success/70" />
       <div className="ml-4 flex h-7 flex-1 items-center justify-center rounded-md bg-background px-3 text-xs text-muted-foreground">
-        talktoexl.app / Q3_sales.xlsx
+        magicexcel.app / Q3_sales.xlsx
       </div>
     </div>
   );

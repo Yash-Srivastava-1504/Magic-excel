@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { Upload, FileSpreadsheet, ArrowLeft } from "lucide-react";
+import logoUrl from "@/assets/logo.png";
 import { backendApi } from "@/lib/api";
 import type { CellStyleMap } from "@/lib/cellStyles";
 
@@ -53,9 +54,9 @@ export default function FileLoadScreen({ onLoad, hasFiles, onBack }: FileLoadScr
           </button>
         )}
         <div className="mb-8">
-          <img src="/icon.png" alt="Dupoch" className="w-20 h-20 object-contain mx-auto mb-4 h-12 w-12 text-primary" />
+          <img src={logoUrl} alt="Magic Excel" className="w-20 h-20 object-contain mx-auto mb-4 text-primary" />
           {/* <FileSpreadsheet className="mx-auto mb-4 h-12 w-12 text-primary" /> */}
-          <h1 className="text-2xl font-bold text-foreground">Dupoch</h1>
+          <h1 className="text-2xl font-bold text-foreground">Magic Excel</h1>
           <p className="mt-2 text-sm text-muted-foreground">Excel-like Spreadsheet with AI Automation</p>
         </div>
         <div
