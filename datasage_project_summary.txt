@@ -1,0 +1,299 @@
+================================================================================
+                        DATASAGE -- FULL PROJECT BREAKDOWN
+                        (Also known as: talktoExl / DataSage)
+================================================================================
+
+================================================================================
+1. WHAT IS THIS PROJECT?
+================================================================================
+
+DataSage (branded "talktoExl") is an AI-powered, browser-based spreadsheet
+automation tool. Think of it as Excel + ChatGPT merged into one product.
+
+You upload any Excel / XLS / CSV file, and instead of writing formulas or
+clicking through menus, you just TYPE what you want in plain English:
+
+    "delete rows where @Alcohol_Consumption is Yes and @Seatbelt is No"
+    "highlight all rows where @Speed is greater than @Speed_Limit"
+    "set @Status to Critical where @Score is below 40"
+    "what is the average of @Salary?"
+
+The AI understands your intent, translates it into a structured pipeline of
+operations, previews the changes visually in the grid (with highlights,
+strikethroughs, and amber overlays), and only commits when you say so.
+
+In short: It removes the need for formulas, VBA macros, or SQL for anyone
+who works with data files. The target users are analysts, operations teams,
+and non-technical business users who deal with Excel data daily.
+
+
+================================================================================
+2. WHAT DOES IT ACTUALLY DO? (Feature-by-Feature)
+================================================================================
+
+[A] NATURAL LANGUAGE COMMAND ENGINE
+    - User types a plain-English command in the chat bar
+    - The backend runs a two-stage LLM pipeline:
+        Stage 1 (Detect/Compute Agent): Detects if the query is a pure
+          aggregate (sum, avg, count, min, max, median, std). If yes,
+          computes it directly using pandas and returns early -- no pipeline
+          operation is created.
+        Stage 2 (Pipeline Extraction Agent): For transformation commands,
+          the LLM generates a list of structured operation strings
+          (e.g., "set @Col to X where @OtherCol > Y"), which are then
+          parsed into typed PipelineOperation objects.
+    - The @ symbol is used to reference column names (with autocomplete)
+    - The # symbol is used to switch between loaded files
+
+[B] OPERATION PIPELINE (Non-Destructive / Preview-First)
+    - Commands don't apply immediately. They queue into a pipeline stack.
+    - You can stack multiple operations and preview them all together.
+    - Each operation shows: type, affected row count, impact percentage.
+    - You can remove individual steps, expand them, or clear the whole stack.
+    - Warning fires when >50% of rows are affected (safety guard).
+    - Commit applies everything. Discard throws it all away.
+
+[C] LIVE DIFF OVERLAY IN THE DATA GRID
+    - Virtualised spreadsheet grid (handles thousands of rows smoothly).
+    - Pending deletions shown with strikethrough + red tint.
+    - Pending modifications show old value struck through + new in amber.
+    - Highlighted rows get a green/amber/red fill depending on op type.
+    - Scoped rows (from "show/highlight" ops) get a violet left border.
+    - Rows outside scope are dimmed.
+
+[D] SHOW SCOPING
+    - When you run a "show" or "highlight" command, subsequent pipeline
+      operations are automatically scoped to only those matching rows.
+    - Multiple "show" commands broaden the scope additively.
+    - This lets you chain commands like:
+        "show rows where @alcohol > 0"      <- scopes to matching rows
+        "delete those where @seatbelt = No" <- only runs on scoped rows
+
+[E] SAFE AST EXPRESSION EVALUATOR
+    - The backend uses Python's `ast` module to evaluate conditions and
+      value expressions (e.g., "@Price * 1.18 > @Budget").
+    - A custom SafeEvaluator class whitelists only safe operations:
+      arithmetic, comparisons, boolean logic, and a handful of math
+      functions (abs, round, min, max, int, float, str).
+    - This sandboxes user/LLM-generated expressions so no arbitrary
+      Python code can ever be executed on the server.
+
+[F] COLUMN NAME SANITISATION (ColMap)
+    - Real-world Excel columns often have spaces, slashes, percent signs
+      (e.g., "Sale % / Region"). These break Python AST evaluation.
+    - The ColMap utility maps every column to a safe Python identifier
+      before passing it to the LLM or the AST evaluator, then restores
+      original names in the response.
+
+[G] SAVED STACKS
+    - Users can save a named "stack" of pipeline operations to the backend.
+    - Stacks are stored in PostgreSQL and tied to a user account.
+    - Full CRUD: create, list, load, edit, delete stacks.
+    - Loading a stack re-runs the saved operations on the current data.
+
+[H] UNDO STACK
+    - Every committed operation is pushed to an undo history with a timestamp.
+    - One-click undo to any point in history.
+    - Each file has its own independent pipeline and undo stack.
+
+[I] MULTI-FILE SUPPORT
+    - Load multiple Excel/XLS/CSV files simultaneously.
+    - Each file has its own tab, independent pipeline, and undo stack.
+    - Switch files from the sidebar or by typing #filename in the chat.
+
+[J] COLUMN INSPECTOR
+    - Click any column header to see its inferred type, unique value count,
+      and value distribution.
+    - Ctrl+Click any header to append @ColumnName directly to the chat bar.
+
+[K] AGGREGATE COMPUTE (Direct Answers)
+    - For pure math queries ("what is the average of @Salary?"), the system
+      computes and returns the answer directly -- no pipeline step created.
+    - Supports: avg, sum, min, max, median, count, std dev.
+    - Works on scoped rows too (selection-aware aggregates).
+
+[L] AUTH SYSTEM
+    - JWT-based authentication (HS256) via FastAPI.
+    - Login / signup with username + passcode.
+    - Session persisted in localStorage on the frontend.
+
+
+================================================================================
+3. TECH STACK
+================================================================================
+
+BACKEND
+  - Language     : Python 3.14
+  - Framework    : FastAPI (async, ASGI via Uvicorn)
+  - Database     : PostgreSQL (via psycopg2, no ORM -- raw SQL)
+  - AI/LLM       : HuggingFace Router API (OpenAI-compatible endpoint)
+  - Data Engine  : pandas (DataFrame-based pipeline execution)
+  - Excel Parsing: openpyxl
+  - Auth         : python-jose (JWT HS256), passlib
+  - HTTP Client  : httpx (async LLM calls)
+  - Validation   : Pydantic v2 (schemas, settings)
+  - Sandboxing   : Python ast module (SafeEvaluator)
+
+FRONTEND
+  - Language     : TypeScript
+  - Framework    : React 18 + Vite 7
+  - Styling      : Tailwind CSS + shadcn/ui (Radix UI primitives)
+  - State Mgmt   : React hooks (custom: useSpreadsheet, useAuth, useStackEdit)
+  - Server State : TanStack Query (React Query)
+  - Routing      : React Router v6
+  - Icons        : Lucide React
+  - Deployment   : Vercel (vercel.json present)
+
+ARCHITECTURE PATTERN
+  - Stateless server: Backend always receives the full current data +
+    full pipeline, and re-executes from scratch. No spreadsheet state
+    stored in DB -- all commits are frontend-only (in-memory).
+  - REST API: 5 routers under /api/v1/ (auth, files, pipeline, llm, stacks)
+
+
+================================================================================
+4. HOW DATA FLOWS (End-to-End)
+================================================================================
+
+STEP 1 -- UPLOAD
+  User drags an Excel file -> FileLoadScreen -> POST /files/upload
+  -> openpyxl parses .xlsx -> returns rows, columns, styles, titleRows
+  -> DataGrid renders the spreadsheet
+
+STEP 2 -- NATURAL LANGUAGE COMMAND
+  User types in ChatPanel -> POST /llm/command
+  -> Stage 1: ColMap sanitizes column names -> LLM detects if it's a
+    compute-only query (aggregate) -> if yes, pandas computes and returns early
+  -> Stage 2: LLM generates operation strings -> operations.py parses them
+    into PipelineOperation objects -> ColMap restores original column names
+  -> Response: { operations[], computeResults[], exitEarly }
+  -> Frontend appends ops to the active file's pipeline
+
+STEP 3 -- PREVIEW
+  useSpreadsheet detects pipeline change -> POST /pipeline/preview
+  -> pipeline_engine.execute_pipeline() runs all ops in sequence
+  -> SafeEvaluator evaluates conditions/value expressions via AST sandbox
+  -> Returns: { transformedData, cellStyles, highlightedRowIds, deletedRowIds }
+  -> DataGrid renders the diff overlay
+
+STEP 4 -- CONFIRM OR DISCARD
+  User clicks Confirm -> frontend commits transformedData to active file state
+  -> pushes old state to undoStack -> clears pipeline -> idle state
+  User clicks Discard -> pipeline cleared, original data shown
+
+STEP 5 -- SAVE STACK (optional)
+  User saves named stack -> POST /stacks/ -> stored in PostgreSQL
+  Later: load stack -> re-runs saved ops on current data
+
+
+================================================================================
+5. BEST RESUME BULLET POINTS (Technical, Impact-Focused)
+================================================================================
+
+Use these as-is or adapt them. Pick 4-6 for a project entry on your resume.
+
+--- HEADLINE (Project Title Line) ---
+
+  DataSage (talktoExl) -- AI-Powered Spreadsheet Automation Platform
+  React 18 . TypeScript . FastAPI . Python . PostgreSQL . LLM . Pandas
+  [Your GitHub URL here]
+
+--- BULLET POINTS ---
+
+  * Architected a full-stack, AI-driven spreadsheet automation platform using
+    React 18 + TypeScript (Vite) on the frontend and FastAPI + Python on the
+    backend, enabling non-technical users to transform Excel data using plain
+    English commands without writing formulas or SQL.
+
+  * Designed and implemented a two-stage LLM orchestration pipeline: Stage 1
+    (Detect/Compute Agent) classifies queries as aggregate or transformation
+    requests and returns early for pure computations (avg, sum, count, etc.);
+    Stage 2 (Pipeline Extraction Agent) translates natural language into a
+    structured list of typed PipelineOperation objects via a HuggingFace-
+    compatible LLM endpoint.
+
+  * Built a custom AST-based safe expression evaluator (SafeEvaluator) using
+    Python's ast module to sandbox LLM-generated condition and value
+    expressions, whitelisting only arithmetic, comparison, and boolean
+    operators to prevent arbitrary code execution on the server.
+
+  * Implemented a ColMap sanitisation layer that translates real-world Excel
+    column names containing special characters (spaces, %, /, parentheses)
+    into safe Python identifiers before LLM and AST evaluation, then restores
+    original names in API responses -- ensuring correctness across messy,
+    production-grade datasets.
+
+  * Engineered a stateless, preview-first operation pipeline: the backend
+    always receives the full dataset + full pipeline and re-executes from
+    scratch on each preview request, enabling a non-destructive diff overlay
+    in the UI (strikethroughs for deletions, amber for modifications, colour-
+    coded highlights) without persisting spreadsheet state in the database.
+
+  * Developed a virtualised spreadsheet DataGrid in React supporting thousands
+    of rows with constant-time rendering performance, inline cell editing with
+    type inference, and a live diff overlay system that layers pipeline
+    preview changes (highlight, delete, modify, scope borders) independently
+    of the committed data state.
+
+  * Implemented row-level scoping ("Show Scoping") where highlight/show
+    operations automatically constrain all subsequent pipeline operations to
+    the matched row set, enabling chained, context-aware transformations
+    without additional user input.
+
+  * Built a full auth system with JWT (HS256) via python-jose on FastAPI,
+    with session persistence in localStorage on the frontend and a pre-
+    registration waitlist flow, deployed to Vercel.
+
+  * Designed a Saved Stacks feature with full CRUD via a PostgreSQL-backed
+    REST API (/api/v1/stacks/), allowing users to name, store, and replay
+    sets of pipeline operations across different datasets.
+
+  * Integrated TanStack Query (React Query) for server-state management on
+    the frontend and built a custom useSpreadsheet hook as the single source
+    of truth for multi-file state, per-file undo stacks, pipeline queuing,
+    and preview results.
+
+--- SHORTER / CONDENSED VERSION (if you have limited space) ---
+
+  * Built DataSage, an AI-powered spreadsheet tool (React + FastAPI) that
+    converts plain-English commands into structured data transformation
+    pipelines using a two-stage LLM architecture, with a live preview diff
+    overlay and a sandboxed AST expression evaluator for safe execution.
+
+  * Implemented stateless pipeline execution (pandas), LLM orchestration
+    (HuggingFace API), JWT auth, PostgreSQL-backed saved stacks, and a
+    virtualised React data grid supporting thousands of rows with real-time
+    preview diffs and undo/redo history.
+
+
+================================================================================
+6. KEY DESIGN DECISIONS (Good to Mention in Interviews)
+================================================================================
+
+  Q: "Why stateless server execution instead of keeping state in DB?"
+  A: Because spreadsheet state changes frequently and can be large. Keeping
+     the full state on the frontend and sending it per-request avoids complex
+     server-side state management, makes the backend horizontally scalable,
+     and ensures the preview is always computed fresh from the true source.
+
+  Q: "Why a two-stage LLM?"
+  A: Aggregate queries (sum, avg, count) are extremely common and don't need
+     a full pipeline -- they just need a number. Detecting them early in Stage
+     1 avoids unnecessary Stage 2 LLM calls, reduces latency, and returns a
+     cleaner response to the user (a value card, not a pipeline operation).
+
+  Q: "Why a custom AST evaluator instead of eval()?"
+  A: LLMs generate condition expressions that need to be executed on row data.
+     Using Python's built-in eval() would be a security vulnerability since
+     LLM output is untrusted. The SafeEvaluator walks the AST tree and only
+     allows a whitelist of safe node types, making it production-safe.
+
+  Q: "Why ColMap?"
+  A: Real Excel files from businesses have column names like "Gross Profit %",
+     "Net Rev. (USD/unit)", "R&D Cost". These break Python identifiers used
+     in AST evaluation. ColMap creates a bidirectional mapping so the whole
+     system works correctly on real-world, messy data.
+
+================================================================================
+                              END OF DOCUMENT
+================================================================================

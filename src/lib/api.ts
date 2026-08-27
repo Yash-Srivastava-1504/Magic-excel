@@ -48,6 +48,7 @@ async function apiCall<T>(
 /** Interface for the centralized backend API client. */
 export interface BackendApi {
     login: (username: string, passcode: string) => Promise<any>;
+    signup: (username: string, passcode: string) => Promise<any>;
     uploadFile: (file: File) => Promise<any>;
     previewPipeline: (
         data: any[],
@@ -87,6 +88,13 @@ export const backendApi: BackendApi = {
         return apiCall<any>("/auth/login", {
             method: "POST",
             body: formData,
+        });
+    },
+
+    signup: async (username: string, passcode: string) => {
+        return apiCall<any>("/auth/signup", {
+            method: "POST",
+            body: JSON.stringify({ username, password: passcode }),
         });
     },
 

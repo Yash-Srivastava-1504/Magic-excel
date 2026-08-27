@@ -3,20 +3,32 @@ import { Loader2, Eye, EyeOff, X, Minus, Square } from "lucide-react";
 
 interface LoginScreenProps {
   onLogin: (username: string, passcode: string) => Promise<boolean>;
+  onSignup?: (username: string, passcode: string) => Promise<boolean>;
   loading: boolean;
   error: string | null;
+  embedded?: boolean;
 }
 
-export default function LoginScreen({ onLogin, loading, error }: LoginScreenProps) {
+export default function LoginScreen({
+  onLogin,
+  onSignup,
+  loading,
+  error,
+  embedded = false,
+}: LoginScreenProps) {
   const [username, setUsername] = useState("");
   const [passcode, setPasscode] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [shake, setShake] = useState(false);
   const [activeCell, setActiveCell] = useState<string>("B2");
+  const [mode, setMode] = useState<"login" | "signup">("login");
 
   const usernameRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { usernameRef.current?.focus(); setActiveCell("B2"); }, []);
+  useEffect(() => {
+    usernameRef.current?.focus();
+    setActiveCell("B2");
+  }, []);
 
   useEffect(() => {
     if (error) {
@@ -30,7 +42,11 @@ export default function LoginScreen({ onLogin, loading, error }: LoginScreenProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !passcode.trim() || loading) return;
-    await onLogin(username.trim(), passcode);
+    if (mode === "login") {
+      await onLogin(username.trim(), passcode);
+    } else if (onSignup) {
+      await onSignup(username.trim(), passcode);
+    }
   };
 
   const getCellClass = (id: string, isInput = false) => {
@@ -42,35 +58,45 @@ export default function LoginScreen({ onLogin, loading, error }: LoginScreenProp
     `;
   };
 
+  const containerClass = `
+    flex flex-col w-full max-w-4xl bg-background rounded-md border border-border shadow-2xl overflow-hidden relative z-10
+    ${shake ? "animate-[shake_0.45s_ease-in-out]" : ""}
+  `;
+
+  const wrapperClass = embedded
+    ? "w-full select-none"
+    : "flex min-h-screen items-center justify-center bg-[#f3f2f1] p-4 sm:p-8 select-none relative";
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f3f2f1] p-4 sm:p-8 select-none">
+    <div className={wrapperClass}>
       {/* Background layer */}
-      <div
-        className="pointer-events-none fixed inset-0 opacity-[0.05]"
-        style={{
-          backgroundImage: `
-            linear-gradient(hsl(var(--border)) 1px, transparent 1px),
-            linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)
-          `,
-          backgroundSize: "60px 24px",
-        }}
-      />
+      {!embedded && (
+        <div
+          className="pointer-events-none fixed inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage: `
+              linear-gradient(hsl(var(--border)) 1px, transparent 1px),
+              linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)
+            `,
+            backgroundSize: "60px 24px",
+          }}
+        />
+      )}
 
       {/* Container echoing an Excel App Window */}
       <div 
-        className={`
-          flex flex-col w-full max-w-4xl bg-background rounded-md border border-border shadow-2xl overflow-hidden relative z-10
-          ${shake ? "animate-[shake_0.45s_ease-in-out]" : ""}
-        `}
+        className={containerClass}
         style={{ animation: shake ? "shake 0.45s ease-in-out" : undefined }}
       >
         {/* Title Bar - Excel Green */}
         <div className="flex items-center justify-between px-3 py-1.5 bg-[#107C41] text-white">
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 bg-white/20 rounded-sm flex items-center justify-center font-bold text-[10px] select-none shadow-[inset_0_1px_rgba(255,255,255,0.2)]">
-              X
+              M
             </div>
-            <span className="text-xs font-semibold tracking-wide font-sans">talktoExl - Login.xlsx</span>
+            <span className="text-xs font-semibold tracking-wide font-sans">
+              Magic Excel - Authorization.xlsx
+            </span>
           </div>
           <div className="flex items-center gap-1.5 text-white/90">
             <button type="button" tabIndex={-1} className="hover:bg-white/20 p-1.5 rounded-sm transition-colors"><Minus className="w-3.5 h-3.5" /></button>
@@ -129,7 +155,19 @@ export default function LoginScreen({ onLogin, loading, error }: LoginScreenProp
             </div>
             <div className="flex-1 px-3 flex items-center bg-transparent whitespace-nowrap overflow-hidden">
               <span className="truncate">
-                {activeCell === "B2" ? username : activeCell === "B3" ? "********" : activeCell === "C3" ? "AUTH" : ""}
+                {activeCell === "B2"
+                  ? username
+                  : activeCell === "B3"
+                  ? "********"
+                  : activeCell === "B4"
+                  ? mode === "login"
+                    ? "=SIGNUP_PAGE()"
+                    : "=LOGIN_PAGE()"
+                  : activeCell === "C3"
+                  ? mode === "login"
+                    ? "=EXECUTE_LOGIN()"
+                    : "=EXECUTE_SIGNUP()"
+                  : ""}
               </span>
             </div>
           </div>
@@ -142,8 +180,8 @@ export default function LoginScreen({ onLogin, loading, error }: LoginScreenProp
           {/* Column Headers */}
           <div className="flex border-b border-border/80 bg-muted/40 text-[11px] font-semibold text-muted-foreground select-none relative z-20">
             <div className="w-12 border-r border-border/60 bg-muted/60 shadow-[1px_0_0_rgba(0,0,0,0.05)]" />
-            <div className={`w-36 px-2 py-1 border-r border-border/60 text-center hover:bg-muted/80`}>A</div>
-            <div className={`flex-1 max-w-[320px] px-2 py-1 border-r border-border/60 text-center hover:bg-muted/80`}>B</div>
+            <div className="w-36 px-2 py-1 border-r border-border/60 text-center hover:bg-muted/80">A</div>
+            <div className="flex-1 max-w-[320px] px-2 py-1 border-r border-border/60 text-center hover:bg-muted/80">B</div>
             <div className="w-8 border-r border-border/60 text-center hover:bg-muted/80" />
             <div className="w-32 px-2 py-1 border-r border-border/60 text-center hover:bg-muted/80">C</div>
             <div className="flex-1 px-2 py-1 border-r border-border/60 text-center hover:bg-muted/80">D</div>
@@ -170,11 +208,14 @@ export default function LoginScreen({ onLogin, loading, error }: LoginScreenProp
                 
                 <div className="w-36 border-b border-r border-border/50 bg-background relative">
                   <div className={getCellClass("A1")} onClick={() => setActiveCell("A1")}>
+                    <span className="text-muted-foreground font-semibold">Authentication</span>
                     {activeCell === "A1" && <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 bg-[#107C41] border border-white cursor-crosshair z-20" />}
                   </div>
                 </div>
                 
-                <div className="flex-1 max-w-[320px] border-b border-r border-border/50" />
+                <div className="flex-1 max-w-[320px] border-b border-r border-border/50 bg-muted/5 font-mono text-[11px] text-[#107C41] px-3 flex items-center select-none font-bold uppercase">
+                  {mode === "login" ? "Mode: Login (Registered Users)" : "Mode: Sign Up (Create Account)"}
+                </div>
                 <div className="w-8 border-b border-r border-border/50" />
                 <div className="w-32 border-b border-r border-border/50" />
                 <div className="flex-1 border-b border-r border-border/50" />
@@ -200,7 +241,7 @@ export default function LoginScreen({ onLogin, loading, error }: LoginScreenProp
                       autoComplete="username"
                       spellCheck={false}
                       autoFocus
-                      className="w-full h-full bg-transparent outline-none px-0 text-foreground font-sans placeholder:text-muted-foreground/30"
+                      className="w-full h-full bg-transparent outline-none px-3 text-foreground font-sans placeholder:text-muted-foreground/30 border-none ring-0"
                       placeholder=""
                     />
                     {activeCell === "B2" && <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 bg-[#107C41] border border-white cursor-crosshair z-20" />}
@@ -229,7 +270,7 @@ export default function LoginScreen({ onLogin, loading, error }: LoginScreenProp
                       onFocus={() => setActiveCell("B3")}
                       disabled={loading}
                       autoComplete="current-password"
-                      className="w-full h-full bg-transparent outline-none pr-8 text-foreground font-sans placeholder:text-muted-foreground/30"
+                      className="w-full h-full bg-transparent outline-none px-3 pr-8 text-foreground font-sans placeholder:text-muted-foreground/30 border-none ring-0"
                       placeholder=""
                     />
                     <button
@@ -254,11 +295,17 @@ export default function LoginScreen({ onLogin, loading, error }: LoginScreenProp
                       disabled={loading || !username.trim() || !passcode.trim()}
                       className={`
                         w-full h-full flex items-center justify-center gap-1.5 font-bold uppercase tracking-wide text-[11px]
-                        transition-colors outline-none
+                        transition-colors outline-none border-none
                         ${(!username.trim() || !passcode.trim() || loading) ? "bg-muted text-muted-foreground/50 cursor-not-allowed" : "bg-[#107C41] text-white hover:bg-emerald-700"}
                       `}
                     >
-                      {loading ? <><Loader2 className="w-3 h-3 animate-spin" /> RUNNING...</> : "EXECUTE_LOGIN()"}
+                      {loading ? (
+                        <><Loader2 className="w-3 h-3 animate-spin" /> RUNNING...</>
+                      ) : mode === "login" ? (
+                        "EXECUTE_LOGIN()"
+                      ) : (
+                        "EXECUTE_SIGNUP()"
+                      )}
                     </button>
                     {activeCell === "C3" && <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 bg-[#107C41] border border-white cursor-crosshair z-20" />}
                   </div>
@@ -273,13 +320,39 @@ export default function LoginScreen({ onLogin, loading, error }: LoginScreenProp
                 </div>
               </div>
 
-              {/* Extra spacing rows (4-10) to fill the grid visually */}
-              {[4, 5, 6, 7, 8, 9, 10].map(rowNum => (
+              {/* Row 4 (Switch Mode Options) */}
+              <div className="flex h-8 group hover:bg-muted/5 transition-colors items-stretch">
+                <div className="w-12 border-b border-r border-border/60 bg-muted/40 text-center text-[10px] font-medium text-muted-foreground flex items-center justify-center group-hover:bg-muted/60">4</div>
+                
+                <div className="w-36 bg-transparent border-b border-r border-border/50 px-3 flex items-center text-muted-foreground cursor-default">
+                  Switch view
+                </div>
+                
+                <div className="flex-1 max-w-[320px]">
+                  <div className={getCellClass("B4", true)} onClick={() => setActiveCell("B4")}>
+                    <button
+                      type="button"
+                      onFocus={() => setActiveCell("B4")}
+                      onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                      className="w-full h-full text-left px-3 text-[#107C41] dark:text-emerald-400 font-semibold hover:underline bg-transparent border-none outline-none cursor-pointer flex items-center"
+                    >
+                      {mode === "login" ? "=SIGNUP_PAGE()" : "=LOGIN_PAGE()"}
+                    </button>
+                    {activeCell === "B4" && <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 bg-[#107C41] border border-white cursor-crosshair z-20" />}
+                  </div>
+                </div>
+
+                <div className="w-8 border-b border-r border-border/50" />
+                <div className="w-32 border-b border-r border-border/50" />
+                <div className="flex-1 border-b border-r border-border/50" />
+              </div>
+
+              {/* Extra spacing rows (5-10) to fill the grid visually */}
+              {[5, 6, 7, 8, 9, 10].map(rowNum => (
                 <div key={rowNum} className="flex h-8 group hover:bg-muted/5 transition-colors items-stretch">
                   <div className="w-12 border-b border-r border-border/60 bg-muted/40 text-center text-[10px] font-medium text-muted-foreground flex items-center justify-center group-hover:bg-muted/60">{rowNum}</div>
                   <div className="w-36 border-b border-r border-border/50" />
                   <div className="flex-1 max-w-[320px] border-b border-r border-border/50 relative">
-                    {/* Dummy active cell selection just for visual fun if they click */}
                     <div className={getCellClass(`B${rowNum}`, true)} onClick={() => setActiveCell(`B${rowNum}`)}>
                       {activeCell === `B${rowNum}` && <div className="absolute -bottom-1 -right-1 w-1.5 h-1.5 bg-[#107C41] border border-white cursor-crosshair z-20" />}
                     </div>
@@ -315,7 +388,7 @@ export default function LoginScreen({ onLogin, loading, error }: LoginScreenProp
           <div className="flex items-center gap-3">
             <span className="opacity-80 cursor-default">All data stored locally</span>
             <span className="w-px h-3 bg-white/20" />
-            <span className="opacity-80 cursor-default">Powered by Dupoch</span>
+            <span className="opacity-80 cursor-default">Powered by Magic Excel</span>
             <span className="w-px h-3 bg-white/20" />
             <span className="font-mono cursor-default">100%</span>
             <div className="flex gap-[2px] opacity-100 items-end h-2.5">
