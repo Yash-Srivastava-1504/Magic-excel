@@ -1,111 +1,86 @@
-# talktoExl
+# DataSage (Magic - Excel)
 
-**Enterprise Spreadsheet Automation — tell your data what to do.**
+**AI-Powered Spreadsheet Automation Platform — tell your data what to do.**
 
-talktoExl is a browser-based spreadsheet engine that lets you transform, filter, and manipulate Excel data in plain English. Just type what you want, use `@` before column names, preview every change before committing, and undo anything with one click. No formulas. No scripting. No SQL.
-
----
-
-## How It Works
-
-Type what you want to do in the command bar. Use `@` before any column name so talktoExl knows which columns you're referring to. The AI figures out the rest.
+DataSage (branded as Magic-Excel) is an AI-powered, browser-based spreadsheet automation tool. Think of it as Excel + ChatGPT merged into one product. Upload any Excel / XLS / CSV file, and instead of writing formulas, VBA macros, or SQL, just TYPE what you want in plain English:
 
 ```
-show me all rows where @Vehicle_Speed is greater than @Speed_Limit
-delete drunk drivers where @Alcohol_Consumption is Yes and no seatbelt
-set @Status to Critical where @Score is below @Threshold
+"delete rows where @Alcohol_Consumption is Yes and @Seatbelt is No"
+"highlight all rows where @Speed is greater than @Speed_Limit"
+"set @Status to Critical where @Score is below 40"
+"what is the average of @Salary?"
 ```
 
-You can be as specific or as casual as you want — mix plain English with `@column` references freely.
+The AI understands your intent, translates it into a structured pipeline of operations, and previews the changes visually before you commit.
 
 ---
 
 ## Features
 
-### Natural Language Command Bar
-Type anything. The AI interprets your intent and maps it to the right operation on your data.
+### Natural Language Command Engine
+Type anything. The backend runs a two-stage LLM pipeline:
+- **Stage 1 (Detect/Compute Agent):** Computes pure aggregates (sum, avg, min, max, etc.) directly using pandas.
+- **Stage 2 (Pipeline Extraction Agent):** Translates transformation commands into a list of structured operation strings, which are parsed into typed pipeline operations.
 
-- `@` to mention a column — autocomplete dropdown appears instantly
-- `#` to switch between loaded files inline
-- `Ctrl + Click` any column header to append it to your command
+### Operation Pipeline (Non-Destructive)
+Commands don't apply immediately. They queue into a pipeline stack, allowing you to preview multiple operations simultaneously.
+- See affected row count and impact percentage for each step.
+- Remove individual steps, expand them, or clear the stack.
+- Commit applies everything; Discard throws it all away.
 
-### Multi-Column Expression Engine
-Under the hood, conditions support real arithmetic across columns — so the AI can handle requests like:
+### Live Diff Overlay
+A virtualised spreadsheet grid that smoothly handles thousands of rows:
+- Pending deletions show with strikethrough + red tint.
+- Pending modifications show old value struck through + new in amber.
+- Scoped rows get a violet left border, while out-of-scope rows are dimmed.
 
-```
-show rows where speed is more than double the limit
-find cases where marks percentage is below the passing threshold
-```
-
-Any combination of columns, arithmetic, and comparisons works.
-
-### Operation Pipeline
-Commands don't apply immediately — they queue into a pipeline. Stack as many operations as you want, preview them all together in the grid, then commit or discard the entire batch.
-
-- Each operation shows its type, affected row count, and impact percentage
-- Expand any step to inspect its structured breakdown
-- Remove individual steps without clearing the whole stack
-- Warning appears when over 50% of rows are affected
+### Safe AST Expression Evaluator
+The backend uses Python's `ast` module to evaluate conditions and value expressions (e.g., `@Price * 1.18 > @Budget`). A custom `SafeEvaluator` whitelists only safe operations, ensuring no arbitrary code executes on the server.
 
 ### Show Scoping
-When you use `show` or `highlight`, everything that follows in the pipeline is automatically scoped to only those rows:
+Using `show` or `highlight` automatically scopes subsequent pipeline operations to matching rows. Broaden scopes additively with multiple "show" commands.
 
-```
-show me rows where @speed exceeds the @limit     ← scopes to matching rows
-delete the ones where @alcohol was involved     ← only runs on those rows
-set @status to Fatal where no @seatbelt worn     ← still scoped
-```
+### Column Name Sanitisation (ColMap)
+Real-world Excel columns with spaces or special characters are safely mapped to Python identifiers before LLM or AST evaluation, and restored seamlessly in the UI.
 
-- Multiple show commands broaden the scope (more rows added each time)
-- Scoped rows get a **violet left border** in the grid
-- Operation fills (red/amber/green) layer on top independently
-- Rows outside the scope are dimmed
-- If a scoped row doesn't match the next operation — border stays, no fill, moves on
-
-### Undo Stack
-Every committed operation is saved with a timestamp. The history bar at the bottom shows recent operations. Click **Undo** to open the full history — revert to any point instantly.
-
-### Multi-File Support
-Load multiple Excel, XLS, or CSV files simultaneously. Switch between them from the sidebar or mention a file inline with `#filename`. Each file has its own independent pipeline and undo stack.
-
-### Column Inspector
-Click any column header to see its type, unique value count, and value distribution. `Ctrl + Click` any header to append `@ColumnName` directly to the command bar.
-
-### Data Grid
-- Virtualised rendering — handles thousands of rows without slowdown
-- Inline cell editing with type validation
-- Pending deletions shown with strikethrough and red tint
-- Pending modifications show old value struck through next to new value in amber
-
----
-
-## Getting Started
-
-**1. Upload a file** — drag and drop an `.xlsx`, `.xls`, or `.csv` file, or click to browse. Your data never leaves the browser.
-
-**2. Type what you want** — click the command bar at the bottom and describe what you want to do. Use `@` before column names.
-
-**3. Preview** — see the changes highlighted in the grid before anything is committed.
-
-**4. Commit or discard** — click **Commit** to apply the whole pipeline, or **Discard** to throw it away.
-
----
-
-## Environment Variables
-
-```env
-VITE_HF_TOKEN=your_huggingface_token
-```
+### Advanced State Management
+- **Undo Stack:** Revert to any point in history instantly.
+- **Saved Stacks:** Save, list, load, edit, and delete named pipelines (stored in PostgreSQL).
+- **Multi-File Support:** Load multiple files with independent tabs, pipelines, and undo histories. Switch easily via `#filename`.
+- **Column Inspector:** View inferred types, unique value counts, and distribution inline.
 
 ---
 
 ## Tech Stack
 
-- **React** + **TypeScript**
-- **Tailwind CSS**
-- **xlsx** for Excel parsing
-- **HuggingFace Router** (OpenAI-compatible) for AI
-- Fully client-side — no backend, no database, no data leaves the browser
+**Frontend:**
+- **React 18** & **TypeScript** (Vite)
+- **Tailwind CSS** + **shadcn/ui** (Radix UI primitives)
+- **TanStack Query** (React Query) for server state management
+- **React Router v6**
+- Custom hooks (`useSpreadsheet`, `useAuth`, `useStackEdit`)
+
+**Backend:**
+- **Python 3.14** with **FastAPI** (async, ASGI via Uvicorn)
+- **PostgreSQL** (via psycopg2) for database storage
+- **pandas** for data engine and pipeline execution
+- **HuggingFace Router API** for LLM orchestration (OpenAI-compatible)
+- **openpyxl** for Excel parsing
+- **Pydantic v2** for robust validation
+- **python-jose (JWT HS256)** for authentication
+
+**Architecture Highlights:**
+- **Stateless Server:** The backend re-executes the pipeline from scratch on every request, allowing the platform to scale horizontally. All committed state resides in-memory on the frontend.
+- **REST API:** Modularized endpoints for auth, files, pipeline, llm, and stacks.
+
+---
+
+## Getting Started
+
+**1. Upload a file** — drag and drop an `.xlsx`, `.xls`, or `.csv` file.
+**2. Type what you want** — click the command bar and describe the action. Use `@` before column names to autocomplete.
+**3. Preview** — review highlighted changes in the grid (red/amber/green overlays).
+**4. Commit or discard** — apply the whole pipeline to your data or throw it away and start fresh.
 
 ---
 
@@ -119,7 +94,3 @@ VITE_HF_TOKEN=your_huggingface_token
 | `Tab` | Select autocomplete item |
 | `Escape` | Close autocomplete / cancel edit |
 | `Ctrl + Click` column | Append `@ColumnName` to command bar |
-
----
-
-## All data stays in your browser. No external storage. No tracking.
