@@ -26,7 +26,6 @@ export default function LoginScreen({
   const usernameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    usernameRef.current?.focus();
     setActiveCell("B2");
   }, []);
 
@@ -240,7 +239,6 @@ export default function LoginScreen({
                       disabled={loading}
                       autoComplete="username"
                       spellCheck={false}
-                      autoFocus
                       className="w-full h-full bg-transparent outline-none px-3 text-foreground font-sans placeholder:text-muted-foreground/30 border-none ring-0"
                       placeholder=""
                     />
